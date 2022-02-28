@@ -1,21 +1,52 @@
 import discord
-import pickle
-from discord.ext import commands
+import pymongo
+from decouple import config
+from server import *
 
-#bot = commands.Bot(command_prefix='!')
+client = pymongo.MongoClient(config("CLUSTER_URL"))
+collection = client.tasketh.guilds
 
-def getServerConfigs():
+cache = {}
+
+
+def getServerConfigs(serverid):
   """returns the dictionary that contains server configuration"""
-  with open("serverConfig.dat", "rb") as file:
-    return pickle.load(file)
+
+  result = collection.find_one({"Server":serverid})
+  cache[result["Server"]] = result["Prefix"]
+
+  server = Server(serverid)
+  server.prefix = result["Prefix"]
+  server.syntaxDelimiter = result["syntaxDelimiter"]
+  server.bufferUsers = result["Buffer"]
+  server.logo = result["Logo"]
+  server.taskschannel = result["TasksChannel"]
+  server.reportschannel = result["ReportsChannel"]
+  server.taskMention = result["TaskMention"]
+  server.permitted = result["Permitted"]
+  server.reactEmoji = result["Emoji"]
+
+  return server
 
 
 def updateServerConfigs(server):
   """Updates the server configuration"""
-  serverConfigs = getServerConfigs()
-  serverConfigs[server.id] = server
-  with open("serverConfig.dat", "wb") as file:
-    return pickle.dump(serverConfigs, file)
+  ind = {"Server":server.id}
+  dic = {"$set": 
+          {
+            "Prefix":server.prefix, 
+            "syntaxDelimiter":server.syntaxDelimiter, 
+            "Buffer":server.bufferUsers, 
+            "Logo":server.logo, 
+            "TasksChannel":server.taskschannel, 
+            "ReportsChannel": server.reportschannel, 
+            "TaskMention": server.taskMention,
+            "Permitted": server.permitted,
+            "Emoji":server.reactEmoji
+          }
+        }
+
+  collection.update_one(ind, dic, upsert=True)
 
 
 async def setPrefix(message, server):
@@ -25,6 +56,7 @@ async def setPrefix(message, server):
   if 3>len(value)>=1:
     server.prefix = value
     updateServerConfigs(server)
+    cache[server.id]=value
     prefixEmbed = discord.Embed(title=f"Prefix changed to {server.prefix}")
     await message.channel.send(embed=prefixEmbed)
   else:

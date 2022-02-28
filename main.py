@@ -1,12 +1,10 @@
 import discord
 from tasks import *
 from setup import *
-from server import *
-from decouple import config
+
 
 client = discord.Client()
 
-serverConfigs = getServerConfigs()
 
 @client.event
 async def on_ready():
@@ -17,19 +15,27 @@ async def on_guild_join(joinedGuild):
   #it will forget previous configs if bot is re-added into a server
   server = Server(joinedGuild.id)
   updateServerConfigs(server)
-  
+
 @client.event
-async def on_message(message): 
+async def on_message(message):
   """Function called when a message is sent"""
 
-  serverConfigs = getServerConfigs()
-  server = serverConfigs[message.guild.id]
+  try:
+    serverPrefix = cache[message.guild.id]
+  except KeyError:
+    server = getServerConfigs(message.guild.id)
+    serverPrefix = server.prefix
+
+  if message.content.startswith(serverPrefix):
+    try: server
+    except NameError: 
+      server = getServerConfigs(message.guild.id)
 
   #checks if the message is sent by the bot
   if message.author == client.user:           
     return
 
-  if message.content.startswith(server.prefix+"permit"):     
+  if message.content.startswith(serverPrefix+"permit"):     
     """Gives task sending permission to the mentioned role"""
     if message.author.guild_permissions.administrator:
       await permit(message, server)
@@ -37,9 +43,8 @@ async def on_message(message):
       await permDenied(message)
 
 
-  if message.content.startswith(server.prefix+"task "): 
+  if message.content.startswith(serverPrefix+"task "): 
     """Task command"""
-    print(message.author.roles)
     if server.permitted in [role.id for role in message.author.roles]:
 
       #if task and report channel is'nt set up, then throw an error
@@ -60,35 +65,35 @@ async def on_message(message):
     else:
       await permDenied(message)
 
-  if message.content.startswith(server.prefix+"taskchannel"):
+  if message.content.startswith(serverPrefix+"taskchannel"):
     """Sets the channel to send tasks in"""
     if server.permitted in [role.id for role in message.author.roles]:
       await setTasksChannel(message, server)
     else:
       await permDenied(message)
 
-  if message.content.startswith(server.prefix+"reportchannel"):
+  if message.content.startswith(serverPrefix+"reportchannel"):
     """Sets the channel to send reports in"""
     if server.permitted in [role.id for role in message.author.roles]:
       await setReportsChannel(message, server)
     else:
       await permDenied(message)
     
-  if message.content.startswith(server.prefix+"taskmention"):
+  if message.content.startswith(serverPrefix+"taskmention"):
     """Syntax: <prefix>taskmention <role>"""
     if server.permitted in [role.id for role in message.author.roles]:
       await setMentionRole(message, server)
     else:
       await permDenied(message)
 
-  if message.content.startswith(server.prefix+"prefix"):
+  if message.content.startswith(serverPrefix+"prefix"):
     """Syntax: <current prefix>prefix <oldprefix>"""
     if server.permitted in [role.id for role in message.author.roles]:
       await setPrefix(message, server)
     else:
       await permDenied(message)
 
-  if message.content.startswith(server.prefix+"bufferusers"):
+  if message.content.startswith(serverPrefix+"bufferusers"):
     """Syntax: <current prefix>bufferusers <custom number of buffer users>"""
     if server.permitted in [role.id for role in message.author.roles]:
       await setBuffer(message, server)
