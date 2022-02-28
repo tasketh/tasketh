@@ -29,44 +29,71 @@ async def on_message(message):
   if message.author == client.user:           
     return
 
-  #task command
-  if message.content.startswith(server.prefix+"task "): #task command  
-
-    #if task and report channel is'nt set up, then throw an error
-    if None in (server.taskschannel, server.reportschannel):
-      alert = discord.Embed(title="Alert",description= "Channel ID for tasks and reports haven't been configured. Please use the help command and configure them")
-      await message.channel.send(embed=alert)
-
+  if message.content.startswith(server.prefix+"permit"):     
+    """Gives task sending permission to the mentioned role"""
+    if message.author.guild_permissions.administrator:
+      await permit(message, server)
     else:
-      #Separates the command and assigns them to the dictionary.
-      commandList = message.content[len(server.prefix)+4::].strip().split(server.syntaxDelimiter)
-      taskDetails = {'taskUsers':int(commandList[0]), 'taskHours':commandList[1], 'taskName':server.syntaxDelimiter.join(commandList[2::])}
-    
-      sentTaskMsg = await sendTaskEmbed(message, client, taskDetails, server)
-      await message.add_reaction(server.reactEmoji)
-      userList = await collectResponses(sentTaskMsg, client, taskDetails, server)
-      await closeTask(sentTaskMsg, taskDetails, server)
-      await sendReport(client, taskDetails, userList, server)
+      await permDenied(message)
 
 
-  if message.content.startswith(server.prefix+"taskchannel"):     
+  if message.content.startswith(server.prefix+"task "): 
+    """Task command"""
+    print(message.author.roles)
+    if server.permitted in [role.id for role in message.author.roles]:
+
+      #if task and report channel is'nt set up, then throw an error
+      if None in (server.taskschannel, server.reportschannel):
+        alert = discord.Embed(title="Alert",description= "Channel ID for tasks and reports haven't been configured. Please use the help command and configure them")
+        await message.channel.send(embed=alert)
+
+      else:
+        #Separates the command and assigns them to the dictionary.
+        commandList = message.content[len(server.prefix)+4::].strip().split(server.syntaxDelimiter)
+        taskDetails = {'taskUsers':int(commandList[0]), 'taskHours':commandList[1], 'taskName':server.syntaxDelimiter.join(commandList[2::])}
+        
+        sentTaskMsg = await sendTaskEmbed(message, client, taskDetails, server)
+        await message.add_reaction(server.reactEmoji)
+        userList = await collectResponses(sentTaskMsg, client, taskDetails, server)
+        await closeTask(sentTaskMsg, taskDetails, server)
+        await sendReport(client, taskDetails, userList, server)
+    else:
+      await permDenied(message)
+
+  if message.content.startswith(server.prefix+"taskchannel"):
     """Sets the channel to send tasks in"""
-    await setTasksChannel(message, server)
+    if server.permitted in [role.id for role in message.author.roles]:
+      await setTasksChannel(message, server)
+    else:
+      await permDenied(message)
 
   if message.content.startswith(server.prefix+"reportchannel"):
     """Sets the channel to send reports in"""
-    await setReportsChannel(message, server)
-  
-  if message.content.startswith(server.prefix+"taskrole"):
-    """Syntax: <prefix>taskrole <role>"""
-    await setMentionRole(message, server)
+    if server.permitted in [role.id for role in message.author.roles]:
+      await setReportsChannel(message, server)
+    else:
+      await permDenied(message)
+    
+  if message.content.startswith(server.prefix+"taskmention"):
+    """Syntax: <prefix>taskmention <role>"""
+    if server.permitted in [role.id for role in message.author.roles]:
+      await setMentionRole(message, server)
+    else:
+      await permDenied(message)
 
   if message.content.startswith(server.prefix+"prefix"):
     """Syntax: <current prefix>prefix <oldprefix>"""
-    await setPrefix(message, server)
+    if server.permitted in [role.id for role in message.author.roles]:
+      await setPrefix(message, server)
+    else:
+      await permDenied(message)
 
   if message.content.startswith(server.prefix+"bufferusers"):
     """Syntax: <current prefix>bufferusers <custom number of buffer users>"""
-    await setBuffer(message, server)
+    if server.permitted in [role.id for role in message.author.roles]:
+      await setBuffer(message, server)
+    else:
+      await permDenied(message)
 
-client.run(config('TOKEN'))
+
+client.run(config('BOT_TOKEN'))

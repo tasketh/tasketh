@@ -7,11 +7,10 @@ async def sendTaskEmbed(message, client, taskDetails, server):
   """Uses the message object and task details to anounce a task"""
   #Sends the task message and assigns its id to sentTaskMsg
   taskDesc = f"Number of people required: **{taskDetails['taskUsers']}**\nNumber of hours: **{taskDetails['taskHours']}**"
-  
   taskEmbed = discord.Embed(title=f"New Task! {taskDetails['taskName']}",description= taskDesc, color=0x67d129)
   taskEmbed.set_thumbnail(url=server.logo)
   taskEmbed.set_footer(text=taskFooter)
-  sentTaskMsg = await client.get_channel(server.taskschannel).send(content=f'@{server.taskMention}', embed=taskEmbed)
+  sentTaskMsg = await client.get_channel(server.taskschannel).send(content=f'<@&{server.taskMention}>', embed=taskEmbed)
   await sentTaskMsg.add_reaction(server.reactEmoji)
   
   return sentTaskMsg

@@ -1,6 +1,8 @@
 import discord
 import pickle
+from discord.ext import commands
 
+#bot = commands.Bot(command_prefix='!')
 
 def getServerConfigs():
   """returns the dictionary that contains server configuration"""
@@ -64,14 +66,46 @@ async def setBuffer(message, server):
     alert = discord.Embed(title="Error", description="Invalid input")
     await message.channel.send(embed=alert)
   
+async def llama():
+  pass
+
+async def permit(message, server):
+  """Changes the role that has permission to create tasks and change setting.
+  Syntax: <prefix>taskmention <role>
+  Default role mentioned is everyone."""
+  value = message.content.split()[-1] #this wont work if role has spaces
+  roles = {}
+  for role in message.guild.roles:
+    roles[role.name] = role.id
+  try:
+    server.permitted = roles[value]
+    updateServerConfigs(server)
+    alert = discord.Embed(title="Permission role configured", description=f"Permission role set to <@&{server.permitted}>")
+    await message.channel.send(embed=alert)
+  except KeyError:
+    alert = discord.Embed(title="Error", description="That role doesn't exist")
+    await message.channel.send(embed=alert)
+
 
 async def setMentionRole(message, server):
   """Changes the role thats mentioned in task embeds
-  Syntax: <prefix>taskrole <role>
+  Syntax: <prefix>taskmention <role>
   Default role mentioned is everyone."""
   value = message.content.split()[-1] #this wont work if role has spaces
-  server.taskMention = value
-  updateServerConfigs(server)
-  alert = discord.Embed(title="Mention role configured", description=f"Mention role set to <@{value}>")
-  await message.channel.send(embed=alert)
+  roles = {}
+  for role in message.guild.roles:
+    roles[role.name] = role.id
+  try:
+    server.taskMention = roles[value]
+    updateServerConfigs(server)
+    alert = discord.Embed(title="Permission role configured", description=f"Permission role set to <@&{server.taskMention}>")
+    await message.channel.send(embed=alert)
+  except KeyError:
+    alert = discord.Embed(title="Error", description="That role doesn't exist")
+    await message.channel.send(embed=alert)
 
+async def permDenied(message):
+  desc= "BECAUSE I DON'T WANT TO. PERMISSION DENIED. I REFUSE TO ANSWER. BECAUSE I DONT WANT TO. NEXT. YOU HAVE BEEN STOPPED."
+  alert = discord.Embed(title="PERMISSION DENIED", description=desc, url="https://youtu.be/tA8LjcpjjKQ")
+  alert.set_thumbnail(url="https://cdn.discordapp.com/attachments/944164645818744922/947864753026506812/gowk6neidu831.png")
+  await message.channel.send(embed=alert)

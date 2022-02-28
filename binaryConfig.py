@@ -8,7 +8,7 @@ choice = input("CAUTION: \nThis will overwrite the existing default.dat file so 
 if choice.lower() == 'y':
     print("Reconfiguring defualt.dat")
     #setting default server ID to none  
-    default = Server(None) #remove??????????????????
+    default = Server(None)
     serverConfigs = {'default':default}
 
     with open("serverConfig.dat", "wb") as file:
