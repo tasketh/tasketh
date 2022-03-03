@@ -1,2 +1,3 @@
 discord.py==1.7.3
 python-decouple
+pymongo==4.0.1
