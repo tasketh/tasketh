@@ -10,6 +10,7 @@ client = discord.Client()
 task = "task "
 testtask = "testtask "
 
+
 @client.event
 async def on_ready():
     print("Logged in as {0.user}".format(client))
@@ -49,7 +50,7 @@ async def on_message(message):
 
     roles = [role.id for role in message.author.roles]
 
-    if message.content.startswith(serverPrefix + "permit"):
+    if message.content.startswith(serverPrefix + "permit "):
         """Gives task sending permission to the mentioned role"""
         if message.author.guild_permissions.administrator:
             await permit(message, server)
@@ -58,19 +59,20 @@ async def on_message(message):
 
     elif message.content.startswith(serverPrefix + task):
         """Task command"""
-        if (message.author.guild_permissions.administrator) or (server.permitted in roles):
+        if permission(message, server):
 
             # if task and report channel is'nt set up, then throw an error
             if None in (server.taskschannel, server.reportschannel):
-                alert = discord.Embed(
-                    title="Alert",
-                    description="Channel ID for tasks and reports haven't been configured. Please use the help command and configure them",
-                )
-                await message.channel.send(embed=alert)
+                await channelnt(message, server)
 
             else:
                 taskDetails = details(message, server, len(task))
-                sentTaskMsg = await sendTaskEmbed(message, client, taskDetails, server)
+
+                if not (taskDetails["taskUsers"].isdigit() and taskDetails["taskName"]):
+                    await invalidSyntax(message, server)
+                    return
+
+                sentTaskMsg = await sendTaskEmbed(client, taskDetails, server)
                 await message.add_reaction(server.reactEmoji)
                 userList = await collectResponses(
                     sentTaskMsg, client, taskDetails, server
@@ -82,7 +84,7 @@ async def on_message(message):
 
     elif message.content.startswith(serverPrefix + testtask):
         """Test task command that sends a preview of the task emebed"""
-        if (message.author.guild_permissions.administrator) or (server.permitted in roles):
+        if permission(message, server):
             # if task and report channel is'nt set up, then throw an error
             if None in (server.taskschannel, server.reportschannel):
                 alert = discord.Embed(
@@ -97,7 +99,7 @@ async def on_message(message):
         else:
             await permDenied(message, server)
 
-    elif message.content.startswith(serverPrefix + "taskmention"):
+    elif message.content.startswith(serverPrefix + "taskmention "):
         """Syntax: <prefix>taskmention <role>"""
         await check(message, server, setMentionRole)
 
@@ -109,11 +111,11 @@ async def on_message(message):
         """Sets the channel to send reports in"""
         await check(message, server, setReportsChannel)
 
-    elif message.content.startswith(serverPrefix + "prefix"):
+    elif message.content.startswith(serverPrefix + "prefix "):
         """Syntax: <current prefix>prefix <oldprefix>"""
         await check(message, server, setPrefix)
 
-    elif message.content.startswith(serverPrefix + "bufferusers"):
+    elif message.content.startswith(serverPrefix + "bufferusers "):
         """Syntax: <current prefix>bufferusers <custom number of buffer users>"""
         await check(message, server, setBuffer)
 

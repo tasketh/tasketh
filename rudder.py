@@ -51,9 +51,14 @@ def updateServerConfigs(server):
     collection.update_one(ind, dic, upsert=True)
 
 
+permission = lambda message, server: (
+    message.author.guild_permissions.administrator
+) or (server.permitted in [role.id for role in message.author.roles])
+
+
 async def check(message, server, func):
     roles = [role.id for role in message.author.roles]
-    if (message.author.guild_permissions.administrator) or (server.permitted in roles):
+    if permission(message, server):
         await func(message, server)
     else:
         await permDenied(message, server)
@@ -219,4 +224,29 @@ async def permDenied(message, server):
         url="https://cdn.discordapp.com/attachments/944164645818744922/947864753026506812/gowk6neidu831.png"
     )
     alert.set_footer(text="NO", icon_url=server.logo)
+    await message.channel.send(embed=alert, reference=message, mention_author=False)
+
+
+async def invalidSyntax(message, server):
+    alert = discord.Embed(
+        title="Error",
+        description="Invalid syntax",
+        color=pretty,
+    )
+    alert.set_footer(text="Error encountered", icon_url=server.logo)
+    await message.channel.send(embed=alert, reference=message, mention_author=False)
+
+
+async def channelnt(message, server):
+
+    if not (server.taskschannel or server.reportschannel):
+        desc = "Channel ID for tasks and reports haven't been configured. Please use the help command and configure them"
+    elif server.taskschannel and (not server.reportschannel):
+        desc = "Channel ID for reports haven't been configured. Please use the help command and configure them"
+    elif (not server.taskschannel) and server.reportschannel:
+        desc = "Channel ID for tasks haven't been configured. Please use the help command and configure them"
+    else:
+        return
+
+    alert = discord.Embed(title="Alert", description=desc, color=pretty)
     await message.channel.send(embed=alert, reference=message, mention_author=False)

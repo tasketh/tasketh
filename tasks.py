@@ -10,24 +10,24 @@ taskFooter = (
 def details(message, server, n):
     # Separates the command and assigns them to the dictionary.
     commandList = (
-                    message.content[len(server.prefix) + n : :]
-                    .strip()
-                    .split(server.syntaxDelimiter)
-                )
+        message.content[len(server.prefix) + n : :]
+        .strip()
+        .split(server.syntaxDelimiter)
+    )
     taskDetails = {
-        "taskUsers": int(commandList[0]),
+        "taskUsers": commandList[0],
         "taskHours": commandList[1],
         "taskName": server.syntaxDelimiter.join(commandList[2::]).strip(),
     }
     return taskDetails
 
 
-async def sendTaskEmbed(message, client, taskDetails, server):
+async def sendTaskEmbed(client, taskDetails, server):
     """Uses the message object and task details to anounce a task"""
     # Sends the task message and assigns its id to sentTaskMsg
-    taskDesc = f"Number of people required: **{taskDetails['taskUsers']}**\nNumber of hours: **{taskDetails['taskHours']}**"
+    taskDesc = f"**{taskDetails['taskName']}**\n\nNumber of people required: **{taskDetails['taskUsers']}**\nNumber of hours: **{taskDetails['taskHours']}**"
     taskEmbed = discord.Embed(
-        title=f"New Task! {taskDetails['taskName']}",
+        title=f"New Task!",
         description=taskDesc,
         color=0x67D129,
     )
@@ -44,15 +44,20 @@ async def sendTaskEmbed(message, client, taskDetails, server):
 async def testTask(message, taskDetails, server):
     """Uses the message object and task details to anounce a task"""
     # Sends the task message and assigns its id to sentTaskMsg
-    taskDesc = f"Number of people required: **{taskDetails['taskUsers']}**\nNumber of hours: **{taskDetails['taskHours']}**"
+    taskDesc = f"**{taskDetails['taskName']}**\n\nNumber of people required: **{taskDetails['taskUsers']}**\nNumber of hours: **{taskDetails['taskHours']}**"
     taskEmbed = discord.Embed(
-        title=f"New Task! {taskDetails['taskName']}",
+        title=f"New Task!",
         description=taskDesc,
         color=0x67D129,
     )
     taskEmbed.set_thumbnail(url=server.logo)
     taskEmbed.set_footer(text=taskFooter)
-    await message.channel.send(content="This is a preview", embed=taskEmbed)
+    await message.channel.send(
+        content="This is a preview.",
+        embed=taskEmbed,
+        reference=message,
+        mention_author=False,
+    )
 
 
 async def collectResponses(TaskMsg, client, taskDetails, server):
@@ -67,7 +72,7 @@ async def collectResponses(TaskMsg, client, taskDetails, server):
         )
 
     userList = []
-    resUsers = taskDetails["taskUsers"] + server.bufferUsers
+    resUsers = int(taskDetails["taskUsers"]) + server.bufferUsers
     while len(userList) < resUsers:
         reaction, user = await client.wait_for("reaction_add", check=check)
         userId = user.id
@@ -81,7 +86,7 @@ async def closeTask(TaskMsg, taskDetails, server):
     closedTaskName = "Task Closed"
     closedTaskDesc = (
         taskDetails["taskName"]
-        + f"\nNumber of people required: {taskDetails['taskUsers']}\nNumber of hours: {taskDetails['taskHours']}"
+        + f"\n\nNumber of people required: {taskDetails['taskUsers']}\nNumber of hours: {taskDetails['taskHours']}"
     )
     closedTaskEmbed = discord.Embed(title=closedTaskName, description=closedTaskDesc)
     closedTaskEmbed.set_thumbnail(url=server.logo)
@@ -90,14 +95,14 @@ async def closeTask(TaskMsg, taskDetails, server):
 
 
 async def sendReport(client, taskDetails, userList, server):
-    reportDesc = ""
-    reportFooter = "Responses are sorted according to time."
-
+    reportDesc = f"Task: {taskDetails['taskName']}\n\n"
     for i in range(len(userList)):
         reportDesc += f"{str(i+1)}. <@{userList[i]}>\n"
 
+    reportFooter = "Responses are sorted according to time."
+
     report = discord.Embed(
-        title=f"Report for \"{taskDetails['taskName']}\"",
+        title="Report",
         description=reportDesc,
         color=pretty,
     )
