@@ -7,6 +7,8 @@ from about import *
 
 client = discord.Client()
 
+task = "task "
+testtask = "testtask "
 
 @client.event
 async def on_ready():
@@ -54,11 +56,9 @@ async def on_message(message):
         else:
             await permDenied(message)
 
-    elif message.content.startswith(serverPrefix + "task "):
+    elif message.content.startswith(serverPrefix + task):
         """Task command"""
-        if (message.author.guild_permissions.administrator) or (
-            server.permitted in roles
-        ):
+        if (message.author.guild_permissions.administrator) or (server.permitted in roles):
 
             # if task and report channel is'nt set up, then throw an error
             if None in (server.taskschannel, server.reportschannel):
@@ -69,18 +69,7 @@ async def on_message(message):
                 await message.channel.send(embed=alert)
 
             else:
-                # Separates the command and assigns them to the dictionary.
-                commandList = (
-                    message.content[len(server.prefix) + 4 : :]
-                    .strip()
-                    .split(server.syntaxDelimiter)
-                )
-                taskDetails = {
-                    "taskUsers": int(commandList[0]),
-                    "taskHours": commandList[1],
-                    "taskName": server.syntaxDelimiter.join(commandList[2::]),
-                }
-
+                taskDetails = details(message, server, len(task))
                 sentTaskMsg = await sendTaskEmbed(message, client, taskDetails, server)
                 await message.add_reaction(server.reactEmoji)
                 userList = await collectResponses(
@@ -88,6 +77,23 @@ async def on_message(message):
                 )
                 await closeTask(sentTaskMsg, taskDetails, server)
                 await sendReport(client, taskDetails, userList, server)
+        else:
+            await permDenied(message, server)
+
+    elif message.content.startswith(serverPrefix + testtask):
+        """Test task command that sends a preview of the task emebed"""
+        if (message.author.guild_permissions.administrator) or (server.permitted in roles):
+            # if task and report channel is'nt set up, then throw an error
+            if None in (server.taskschannel, server.reportschannel):
+                alert = discord.Embed(
+                    title="Alert",
+                    description="Channel ID for tasks and reports haven't been configured. Please use the help command and configure them",
+                )
+                await message.channel.send(embed=alert)
+
+            else:
+                taskDetails = details(message, server, len(testtask))
+                await testTask(message, taskDetails, server)
         else:
             await permDenied(message, server)
 

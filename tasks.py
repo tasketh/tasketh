@@ -7,6 +7,21 @@ taskFooter = (
 )
 
 
+def details(message, server, n):
+    # Separates the command and assigns them to the dictionary.
+    commandList = (
+                    message.content[len(server.prefix) + n : :]
+                    .strip()
+                    .split(server.syntaxDelimiter)
+                )
+    taskDetails = {
+        "taskUsers": int(commandList[0]),
+        "taskHours": commandList[1],
+        "taskName": server.syntaxDelimiter.join(commandList[2::]).strip(),
+    }
+    return taskDetails
+
+
 async def sendTaskEmbed(message, client, taskDetails, server):
     """Uses the message object and task details to anounce a task"""
     # Sends the task message and assigns its id to sentTaskMsg
@@ -24,6 +39,20 @@ async def sendTaskEmbed(message, client, taskDetails, server):
     await sentTaskMsg.add_reaction(server.reactEmoji)
 
     return sentTaskMsg
+
+
+async def testTask(message, taskDetails, server):
+    """Uses the message object and task details to anounce a task"""
+    # Sends the task message and assigns its id to sentTaskMsg
+    taskDesc = f"Number of people required: **{taskDetails['taskUsers']}**\nNumber of hours: **{taskDetails['taskHours']}**"
+    taskEmbed = discord.Embed(
+        title=f"New Task! {taskDetails['taskName']}",
+        description=taskDesc,
+        color=0x67D129,
+    )
+    taskEmbed.set_thumbnail(url=server.logo)
+    taskEmbed.set_footer(text=taskFooter)
+    await message.channel.send(content="This is a preview", embed=taskEmbed)
 
 
 async def collectResponses(TaskMsg, client, taskDetails, server):

@@ -4,11 +4,15 @@ from rudder import pretty
 
 
 async def helpeth(message, server):
+    with open("help.txt", "r") as file:
+        #syntax delimiter is hardcoded
+        desc = file.read()
     help_tasketh = discord.Embed(
         title=(
             "This is tasketh! A simple discord bot that lets moderators assign,"
             "and users claim tasks. Here are details about all commands"
         ),
+        description=desc,
         color=pretty,
     )
     # help_tasketh.set_thumbnail(url=server.logo)
@@ -19,7 +23,6 @@ async def helpeth(message, server):
 
 
 async def status(message, server):
-    print("tasketh state")
     reply = discord.Embed(
         title="Current status of tasketh",
         description=f"""
@@ -29,6 +32,8 @@ async def status(message, server):
         Channel that receives tasks: <#{server.taskschannel}>
         Channel that receives reports: <#{server.reportschannel}>
         Number of buffer user responses considered: `{server.bufferUsers}`""",
+        color=pretty,
+
     )
     reply.set_footer(
         text=f"Use the command `{server.prefix}help` for help on all tasketh commands",
