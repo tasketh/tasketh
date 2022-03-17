@@ -1,3 +1,4 @@
+from random import sample
 import discord
 import pymongo
 from decouple import config
@@ -51,14 +52,14 @@ def updateServerConfigs(server):
     collection.update_one(ind, dic, upsert=True)
 
 
-permission = lambda message, server: (
-    message.author.guild_permissions.administrator
-) or (server.permitted in [role.id for role in message.author.roles])
+permission = lambda author, server: (
+    author.guild_permissions.administrator
+) or (server.permitted in [role.id for role in author.roles])
 
 
 async def check(message, server, func):
     roles = [role.id for role in message.author.roles]
-    if permission(message, server):
+    if permission(message.author, server):
         await func(message, server)
     else:
         await permDenied(message, server)
@@ -73,7 +74,9 @@ async def setPrefix(message, server):
         updateServerConfigs(server)
         cache[server.id] = value
         prefixEmbed = discord.Embed(
-            title="Success", description=f"Prefix changed to {server.prefix}"
+            title="Success",
+            description=f"Prefix changed to {server.prefix}",
+            color=pretty,
         )
         prefixEmbed.set_footer(text="Settings saved", icon_url=server.logo)
         await message.channel.send(
@@ -82,7 +85,7 @@ async def setPrefix(message, server):
     else:
         prefixEmbed = discord.Embed(
             title="Error",
-            description="Prefix cannot be longer than 3 characters",
+            description="Prefix cannot be longer than 2 characters",
             color=pretty,
         )
         prefixEmbed.set_footer(text="Error encountered", icon_url=server.logo)
@@ -150,9 +153,15 @@ async def setBuffer(message, server):
         alert.set_footer(icon_url=server.logo)
         await message.channel.send(embed=alert, reference=message, mention_author=False)
 
+quotes = client.tasketh.iconic_quotes
 
-async def llama():
-    pass
+async def llama(message):
+    test = quotes.aggregate([{"$sample":{"size":1}}])
+    embed = discord.Embed(
+        description=list(test)[0]['quote'],
+        color=pretty,
+    )
+    await message.channel.send(embed=embed, reference=message, mention_author=False)
 
 
 async def permit(message, server):

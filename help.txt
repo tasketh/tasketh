@@ -1,5 +1,5 @@
 **Command** : **Purpose**
-`tasketh-state` : Will display current state of tasketh setting for the particular server."
+`tasketh-state` : Will display current state of tasketh setting for the particular server.
 
 `permit <role>` : Allows users with the specified role to use all the commands.
         
@@ -9,17 +9,16 @@
        
 `taskmention <role>` : Changes the role pinged when a task is announced. Default is @everyone.
        
-`task <number of peope needed> | <number of hours> | <task description>` : Sends a task with the given details in the task channel.
+`task <number of peope needed> | <number of hours> | <task description>` : Sends a task with the given details in the task channel. Permitted users can react to the embed with ❌ anytime to close the task.
        
 `bufferusers <number>` : tasketh can accept more than the specified
 number of responses so that the task can be given to the extra responsers when required.
         
-        
 `prefix <new prefix>` : Changes the prefix in that particular server.
 
 
-**Setup tasketh in your server**"
+**Setup tasketh in your server**
 1. After inviting tasketh to your server, users with administrative permissions can optionally give other roles the permission to use all commands using `permit <role>`. Users with roles that have been given permission by this method will be referred to as 'permitted users'
 2. Permitted users can use `taskchannel` in the channel they want to send task announcements in.
-3. Then use `reportchannel` in the channel they want to see the reports in, a report is the list of users that have claimed the tasks.
+3. Then use `reportchannel` in the channel they want to see the reports in. A report is the list of users that have claimed the tasks.
 4. All set! tasketh is now ready to be used. Permitted users can tweak the settings to their liking.

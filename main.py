@@ -59,7 +59,7 @@ async def on_message(message):
 
     elif message.content.startswith(serverPrefix + task):
         """Task command"""
-        if permission(message, server):
+        if permission(message.author, server):
 
             # if task and report channel is'nt set up, then throw an error
             if None in (server.taskschannel, server.reportschannel):
@@ -81,10 +81,13 @@ async def on_message(message):
                 await sendReport(client, taskDetails, userList, server)
         else:
             await permDenied(message, server)
+    
+    elif message.content.startswith(serverPrefix + "llama"):
+        await llama(message)
 
     elif message.content.startswith(serverPrefix + testtask):
         """Test task command that sends a preview of the task emebed"""
-        if permission(message, server):
+        if permission(message.author, server):
             # if task and report channel is'nt set up, then throw an error
             if None in (server.taskschannel, server.reportschannel):
                 alert = discord.Embed(

@@ -1,6 +1,6 @@
 import discord
 
-from rudder import pretty
+from rudder import pretty, permission
 
 taskFooter = (
     "Please keep in mind that tasks are assigned on a first come, first served basis."
@@ -15,8 +15,8 @@ def details(message, server, n):
         .split(server.syntaxDelimiter)
     )
     taskDetails = {
-        "taskUsers": commandList[0],
-        "taskHours": commandList[1],
+        "taskUsers": commandList[0].strip(),
+        "taskHours": commandList[1].strip(),
         "taskName": server.syntaxDelimiter.join(commandList[2::]).strip(),
     }
     return taskDetails
@@ -68,15 +68,21 @@ async def collectResponses(TaskMsg, client, taskDetails, server):
         return (
             user != client.user
             and reaction.message == TaskMsg
-            and str(reaction.emoji) == server.reactEmoji
+            and str(reaction.emoji) in [server.reactEmoji, '❌']
         )
 
     userList = []
     resUsers = int(taskDetails["taskUsers"]) + server.bufferUsers
     while len(userList) < resUsers:
         reaction, user = await client.wait_for("reaction_add", check=check)
-        userId = user.id
-        userList.append(userId)
+
+        if reaction.emoji==server.reactEmoji:
+            userId = user.id
+            if userId in userList:
+                userList.remove(userId)
+            userList.append(userId)
+        elif reaction.emoji=='❌' and permission(user, server):
+            break
 
     return userList
 
