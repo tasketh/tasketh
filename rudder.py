@@ -1,4 +1,3 @@
-from random import sample
 import discord
 import pymongo
 from decouple import config
